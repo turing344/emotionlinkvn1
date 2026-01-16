@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmotionLink - Real-time Emotion Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .connect-section {
+            text-align: center;
+        }
+        
+        #connectBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+        
+        #connectBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        #connectBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 15px;
+            font-size: 1.1em;
+            color: #666;
+        }
+        
+        .status.connected {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .metric-unit {
+            font-size: 0.5em;
+            color: #666;
+            margin-left: 5px;
+        }
+        
+        .emotion-bars {
+            margin-top: 20px;
+        }
+        
+        .emotion-item {
+            margin-bottom: 15px;
+        }
+        
+        .emotion-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .emotion-label {
+            font-size: 1em;
+        }
+        
+        .emotion-percentage {
+            font-size: 1em;
+            color: #667eea;
+        }
+        
+        .emotion-bar-bg {
+            background: #e5e7eb;
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .emotion-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .emotion-calm .emotion-bar-fill { background: linear-gradient(90deg, #34d399, #10b981); }
+        .emotion-stress .emotion-bar-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .emotion-happy .emotion-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+        .emotion-sad .emotion-bar-fill { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
+        .emotion-excited .emotion-bar-fill { background: linear-gradient(90deg, #f472b6, #ec4899); }
+        .emotion-active .emotion-bar-fill { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }
+        .emotion-tired .emotion-bar-fill { background: linear-gradient(90deg, #94a3b8, #64748b); }
+        .emotion-neutral .emotion-bar-fill { background: linear-gradient(90deg, #9ca3af, #6b7280); }
+        
+        .dominant-emotion {
+            text-align: center;
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .dominant-label {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .dominant-value {
+            font-size: 3em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .log-section {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dominant-value {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 EmotionLink</h1>
+            <p class="subtitle">Real-time Emotion Monitoring via HRV Analysis</p>
+        </header>
+
+        <div class="card connect-section">
+            <button id="connectBtn">Connect to Device</button>
+            <div class="status" id="status">Not Connected</div>
+        </div>
+
+        <div id="dataSection" class="hidden">
+            <div class="card">
+                <h2>📊 Vital Signs</h2>
+                <div class="data-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Heart Rate</div>
+                        <div class="metric-value" id="heartRate">--<span class="metric-unit">BPM</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">SDNN</div>
+                        <div class="metric-value" id="sdnn">--<span class="metric-unit">ms</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">RMSSD</div>
+                        <div class="metric-value" id="rmssd">--<span class="metric-unit">ms</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Motion</div>
+                        <div class="metric-value" id="motion" style="font-size: 1.5em;">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>😊 Emotion Analysis</h2>
+                <div class="emotion-bars">
+                    <div class="emotion-item emotion-calm">
+                        <div class="emotion-header">
+                            <span class="emotion-label">😌 CALM</span>
+                            <span class="emotion-percentage" id="calmPct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="calmBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-item emotion-stress">
+                        <div class="emotion-header">
+                            <span class="emotion-label">😰 STRESS</span>
+                            <span class="emotion-percentage" id="stressPct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="stressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-item emotion-happy">
+                        <div class="emotion-header">
+                            <span class="emotion-label">😊 HAPPY</span>
+                            <span class="emotion-percentage" id="happyPct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="happyBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-item emotion-sad">
+                        <div class="emotion-header">
+                            <span class="emotion-label">😢 SAD</span>
+                            <span class="emotion-percentage" id="sadPct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="sadBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-item emotion-excited">
+                        <div class="emotion-header">
+                            <span class="emotion-label">🤩 EXCITED</span>
+                            <span class="emotion-percentage" id="excitedPct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="excitedBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-item emotion-active">
+                        <div class="emotion-header">
+                            <span class="emotion-label">🏃 ACTIVE</span>
+                            <span class="emotion-percentage" id="activePct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="activeBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-item emotion-tired">
+                        <div class="emotion-header">
+                            <span class="emotion-label">😴 TIRED</span>
+                            <span class="emotion-percentage" id="tiredPct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="tiredBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-item emotion-neutral">
+                        <div class="emotion-header">
+                            <span class="emotion-label">😐 NEUTRAL</span>
+                            <span class="emotion-percentage" id="neutralPct">0%</span>
+                        </div>
+                        <div class="emotion-bar-bg">
+                            <div class="emotion-bar-fill" id="neutralBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dominant-emotion">
+                    <div class="dominant-label">Current Dominant Emotion</div>
+                    <div class="dominant-value" id="dominantEmotion">--</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📝 Live Data Log</h2>
+                <div class="log-section" id="logSection"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        const TX_CHARACTERISTIC_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+        
+        let device;
+        let characteristic;
+        let buffer = '';
+        
+        const connectBtn = document.getElementById('connectBtn');
+        const status = document.getElementById('status');
+        const dataSection = document.getElementById('dataSection');
+        const logSection = document.getElementById('logSection');
+        
+        connectBtn.addEventListener('click', async () => {
+            try {
+                connectBtn.disabled = true;
+                status.textContent = 'Scanning for devices...';
+                addLog('🔍 Starting Bluetooth scan...');
+                
+                // Request device - acceptAllDevices to show all BLE devices
+                device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: [SERVICE_UUID]
+                });
+                
+                addLog('📱 Device selected: ' + device.name);
+                status.textContent = 'Connecting to ' + device.name + '...';
+                
+                const server = await device.gatt.connect();
+                addLog('✅ GATT server connected');
+                
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                addLog('✅ Service found: ' + SERVICE_UUID);
+                
+                characteristic = await service.getCharacteristic(TX_CHARACTERISTIC_UUID);
+                addLog('✅ Characteristic found: ' + TX_CHARACTERISTIC_UUID);
+                
+                await characteristic.startNotifications();
+                characteristic.addEventListener('characteristicvaluechanged', handleData);
+                addLog('✅ Notifications started');
+                
+                status.textContent = '✅ Connected to ' + device.name;
+                status.classList.add('connected');
+                connectBtn.textContent = 'Connected ✓';
+                dataSection.classList.remove('hidden');
+                
+                // Handle disconnect
+                device.addEventListener('gattserverdisconnected', () => {
+                    status.textContent = '❌ Disconnected';
+                    status.classList.remove('connected');
+                    connectBtn.textContent = 'Reconnect';
+                    connectBtn.disabled = false;
+                    addLog('❌ Device disconnected');
+                });
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                status.textContent = '❌ Connection failed';
+                connectBtn.disabled = false;
+                
+                if (error.name === 'NotFoundError') {
+                    addLog('❌ No device found. Make sure:');
+                    addLog('   1. ESP32 is powered on');
+                    addLog('   2. Bluetooth is enabled');
+                    addLog('   3. Select the correct device from list');
+                } else if (error.name === 'SecurityError') {
+                    addLog('❌ HTTPS required or user gesture needed');
+                } else if (error.name === 'NetworkError') {
+                    addLog('❌ Connection failed. Device may not support this service.');
+                    addLog('   Service UUID: ' + SERVICE_UUID);
+                } else {
+                    addLog('❌ Error: ' + error.name + ' - ' + error.message);
+                }
+            }
+        });
+        
+        function handleData(event) {
+            const decoder = new TextDecoder('utf-8');
+            const data = decoder.decode(event.target.value);
+            buffer += data;
+            
+            // Process complete lines
+            let lines = buffer.split('\n');
+            buffer = lines.pop(); // Keep incomplete line in buffer
+            
+            lines.forEach(line => {
+                if (line.trim()) {
+                    processLine(line);
+                }
+            });
+        }
+        
+        function processLine(line) {
+            addLog(line);
+            
+            // Parse different data types
+            if (line.includes('Heart Rate:')) {
+                const match = line.match(/Heart Rate: (\d+) BPM/);
+                if (match) document.getElementById('heartRate').innerHTML = match[1] + '<span class="metric-unit">BPM</span>';
+            }
+            
+            if (line.includes('SDNN:')) {
+                const match = line.match(/SDNN: ([\d.]+) ms/);
+                if (match) document.getElementById('sdnn').innerHTML = parseFloat(match[1]).toFixed(1) + '<span class="metric-unit">ms</span>';
+            }
+            
+            if (line.includes('RMSSD:')) {
+                const match = line.match(/RMSSD: ([\d.]+) ms/);
+                if (match) document.getElementById('rmssd').innerHTML = parseFloat(match[1]).toFixed(1) + '<span class="metric-unit">ms</span>';
+            }
+            
+            if (line.includes('Motion:')) {
+                const match = line.match(/Motion: (\w+)/);
+                if (match) {
+                    const motion = match[1];
+                    document.getElementById('motion').textContent = motion;
+                }
+            }
+            
+            // Parse emotion probabilities
+            if (line.includes('CALM:')) {
+                const match = line.match(/CALM: ([\d.]+)%/);
+                if (match) updateEmotion('calm', parseFloat(match[1]));
+            }
+            if (line.includes('STRESS:')) {
+                const match = line.match(/STRESS: ([\d.]+)%/);
+                if (match) updateEmotion('stress', parseFloat(match[1]));
+            }
+            if (line.includes('HAPPY:')) {
+                const match = line.match(/HAPPY: ([\d.]+)%/);
+                if (match) updateEmotion('happy', parseFloat(match[1]));
+            }
+            if (line.includes('SAD:')) {
+                const match = line.match(/SAD: ([\d.]+)%/);
+                if (match) updateEmotion('sad', parseFloat(match[1]));
+            }
+            if (line.includes('EXCITED:')) {
+                const match = line.match(/EXCITED: ([\d.]+)%/);
+                if (match) updateEmotion('excited', parseFloat(match[1]));
+            }
+            if (line.includes('ACTIVE:')) {
+                const match = line.match(/ACTIVE: ([\d.]+)%/);
+                if (match) updateEmotion('active', parseFloat(match[1]));
+            }
+            if (line.includes('TIRED:')) {
+                const match = line.match(/TIRED: ([\d.]+)%/);
+                if (match) updateEmotion('tired', parseFloat(match[1]));
+            }
+            if (line.includes('NEUTRAL:')) {
+                const match = line.match(/NEUTRAL: ([\d.]+)%/);
+                if (match) updateEmotion('neutral', parseFloat(match[1]));
+            }
+            
+            if (line.includes('Dominant:')) {
+                const match = line.match(/Dominant: (\w+)/);
+                if (match) {
+                    const emotion = match[1];
+                    document.getElementById('dominantEmotion').textContent = emotion;
+                }
+            }
+        }
+        
+        function updateEmotion(emotion, percentage) {
+            const pct = document.getElementById(emotion + 'Pct');
+            const bar = document.getElementById(emotion + 'Bar');
+            
+            if (pct) pct.textContent = percentage.toFixed(1) + '%';
+            if (bar) bar.style.width = percentage + '%';
+        }
+        
+        function addLog(message) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logSection.appendChild(entry);
+            logSection.scrollTop = logSection.scrollHeight;
+            
+            // Keep only last 100 entries
+            while (logSection.children.length > 100) {
+                logSection.removeChild(logSection.firstChild);
+            }
+        }
+        
+        // Check Web Bluetooth support
+        if (!navigator.bluetooth) {
+            status.textContent = '❌ Web Bluetooth not supported. Use Chrome/Edge on desktop or Android.';
+            connectBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>
